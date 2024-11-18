@@ -140,6 +140,100 @@
             <q-tooltip :delay="500" content-class="text-bold">Redo (Ctrl+Shift+Z)</q-tooltip>
             <q-icon name="redo" />
           </q-btn>
+
+          <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('table') !== -1" />
+
+          <q-btn flat color="primary" dense>
+            <q-icon name="fa fa-table" />
+            <q-menu>
+              <q-list dense>
+                <q-item clickable @click="editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()">
+                  <q-item-section avatar>
+                    <q-icon name="fa fa-plus" />
+                  </q-item-section>
+                  <q-item-section>Insert table</q-item-section>
+                </q-item>
+                <q-item clickable @click="editor.chain().focus().addColumnBefore().run()">
+                  <q-item-section avatar>
+                    <q-icon name="fa fa-arrow-left" />
+                  </q-item-section>
+                  <q-item-section>Add column before</q-item-section>
+                </q-item>
+                <q-item clickable @click="editor.chain().focus().addColumnAfter().run()">
+                  <q-item-section avatar>
+                    <q-icon name="fa fa-arrow-right" />
+                  </q-item-section>
+                  <q-item-section>Add column after</q-item-section>
+                </q-item>
+                <q-item clickable @click="editor.chain().focus().deleteColumn().run()">
+                  <q-item-section avatar>
+                    <q-icon name="fa fa-trash" />
+                  </q-item-section>
+                  <q-item-section>Delete column</q-item-section>
+                </q-item>
+                <q-item clickable @click="editor.chain().focus().addRowBefore().run()">
+                  <q-item-section avatar>
+                    <q-icon name="fa fa-arrow-up" />
+                  </q-item-section>
+                  <q-item-section>Add row before</q-item-section>
+                </q-item>
+                <q-item clickable @click="editor.chain().focus().addRowAfter().run()">
+                  <q-item-section avatar>
+                    <q-icon name="fa fa-arrow-down" />
+                  </q-item-section>
+                  <q-item-section>Add row after</q-item-section>
+                </q-item>
+                <q-item clickable @click="editor.chain().focus().deleteRow().run()">
+                  <q-item-section avatar>
+                    <q-icon name="fa fa-trash" />
+                  </q-item-section>
+                  <q-item-section>Delete row</q-item-section>
+                </q-item>
+                <q-item clickable @click="editor.chain().focus().deleteTable().run()">
+                  <q-item-section avatar>
+                    <q-icon name="fa fa-minus" />
+                  </q-item-section>
+                  <q-item-section>Delete table</q-item-section>
+                </q-item>
+                <q-item clickable @click="editor.chain().focus().mergeCells().run()">
+                  <q-item-section avatar>
+                    <q-icon name="fa fa-code-merge" />
+                  </q-item-section>
+                  <q-item-section>Merge cells</q-item-section>
+                </q-item>
+                <q-item clickable @click="editor.chain().focus().splitCell().run()">
+                  <q-item-section avatar>
+                    <q-icon name="fa fa-arrows-split-up-and-left" />
+                  </q-item-section>
+                  <q-item-section>Split cell</q-item-section>
+                </q-item>
+                <q-item clickable @click="editor.chain().focus().toggleHeaderColumn().run()">
+                  <q-item-section avatar>
+                    <q-icon name="fa fa-heading" />
+                  </q-item-section>
+                  <q-item-section>Toggle header column</q-item-section>
+                </q-item>
+                <q-item clickable @click="editor.chain().focus().toggleHeaderRow().run()">
+                  <q-item-section avatar>
+                    <q-icon name="fa fa-heading" />
+                  </q-item-section>
+                  <q-item-section>Toggle header row</q-item-section>
+                </q-item>
+                <q-item clickable @click="editor.chain().focus().toggleHeaderCell().run()">
+                  <q-item-section avatar>
+                    <q-icon name="fa fa-heading" />
+                  </q-item-section>
+                  <q-item-section>Toggle header cell</q-item-section>
+                </q-item>
+                <q-item clickable @click="editor.chain().focus().fixTables().run()">
+                  <q-item-section avatar>
+                    <q-icon name="fa fa-wrench" />
+                  </q-item-section>
+                  <q-item-section>Fix tables</q-item-section>
+                </q-item>
+              </q-list>
+            </q-menu>
+          </q-btn>
         </template>
         <div v-if="diff !== undefined && (diff || value) && value !== diff">
           <q-btn flat size="sm" dense :class="{ 'is-active': toggleDiff }" label="toggle diff" @click="toggleDiff = !toggleDiff" />
@@ -166,6 +260,10 @@ import CustomImage from "./editor-image";
 import Caption from "./editor-caption";
 import CustomHighlight from "./editor-highlight";
 import TrailingNode from "./editor-trailing-node";
+import Table from "@tiptap/extension-table";
+import TableCell from "@tiptap/extension-table-cell";
+import TableHeader from "@tiptap/extension-table-header";
+import TableRow from "@tiptap/extension-table-row";
 import CodeBlockComponent from "./editor-code-block";
 
 const Diff = require("diff");
@@ -187,7 +285,7 @@ export default {
     toolbar: {
       type: Array,
       default: function () {
-        return ["format", "marks", "list", "code", "image", "caption"];
+        return ["format", "marks", "list", "code", "image", "caption", "table"];
       },
     },
     noAffix: {
@@ -235,6 +333,13 @@ export default {
             lowlight,
             defaultLanguage: "plaintext",
           }),
+          Table.configure({
+            resizable: true,
+          }),
+          TableRow,
+          TableHeader,
+          TableCell,
+          CodeBlock,
         ],
         onUpdate: ({ getJSON, getHTML }) => {
           if (this.noSync) return;
