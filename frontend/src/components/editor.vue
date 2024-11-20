@@ -307,8 +307,8 @@ export default {
         },
         toolbar: {
             type: Array,
-            default: function () {
-                return ['format', 'marks', 'list', 'code', 'image', 'caption']
+            default: function() {
+                return ['format', 'marks', 'list', 'code', 'image', 'caption', 'table']
             }
         },
         noAffix: {
