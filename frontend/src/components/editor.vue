@@ -289,7 +289,7 @@ export default {
     toolbar: {
       type: Array,
       default: function () {
-        return ["format", "marks", "list", "code", "image", "caption", "table"];
+        return ["format", "marks", "list", "code", "image", "caption"];
       },
     },
     noAffix: {
@@ -335,6 +335,7 @@ export default {
           TableRow,
           TableHeader,
           TableCell,
+          Footnote,
           CodeBlock,
         ],
         onUpdate: ({ getJSON, getHTML }) => {
