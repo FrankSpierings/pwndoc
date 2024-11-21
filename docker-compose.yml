@@ -23,7 +23,7 @@ services:
   pwndoc-backend:
     build: ./backend
     image: yeln4ts/pwndoc:backend
-    container_name: pwndoc-backend1
+    container_name: pwndoc-backend
     volumes:
       - ./backend/report-templates:/app/report-templates
       - ./backend/src/config:/app/src/config
@@ -41,7 +41,7 @@ services:
   pwndoc-frontend:
     build: ./frontend
     image: yeln4ts/pwndoc:frontend
-    container_name: pwndoc-frontend1
+    container_name: pwndoc-frontend
     restart: always
     ports:
       - 8443:8443
