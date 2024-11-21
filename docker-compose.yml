@@ -23,7 +23,7 @@ services:
   pwndoc-backend:
     build: ./backend
     image: yeln4ts/pwndoc:backend
-    container_name: pwndoc-backend
+    container_name: pwndoc-backend1
     volumes:
       - ./backend/report-templates:/app/report-templates
       - ./backend/src/config:/app/src/config
@@ -35,13 +35,13 @@ services:
       - 4242:4242
     links:
       - mongodb
-    networks: 
+    networks:
       - backend
 
   pwndoc-frontend:
     build: ./frontend
     image: yeln4ts/pwndoc:frontend
-    container_name: pwndoc-frontend
+    container_name: pwndoc-frontend1
     restart: always
     ports:
       - 8443:8443
@@ -51,6 +51,7 @@ services:
 volumes:
   mongo-data:
 
+
 networks:
   backend:
-      driver: bridge
+    driver: bridge
