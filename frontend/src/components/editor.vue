@@ -253,7 +253,6 @@
 import { Editor, EditorContent, VueNodeViewRenderer } from "@tiptap/vue-2";
 
 // Import Extensions
-import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import CustomImage from "./editor-image";
@@ -264,7 +263,7 @@ import Table from "@tiptap/extension-table";
 import TableCell from "@tiptap/extension-table-cell";
 import TableHeader from "@tiptap/extension-table-header";
 import TableRow from "@tiptap/extension-table-row";
-import CodeBlockComponent from "./editor-code-block";
+import CodeBlock from "./editor-codeblock";
 
 const Diff = require("diff");
 
@@ -324,14 +323,6 @@ export default {
           TrailingNode.configure({
             node: "paragraph",
             notAfter: ["paragraph", "heading", "bullet_list", "ordered_list", "code_block"],
-          }),
-          CodeBlockLowlight.extend({
-            addNodeView() {
-              return VueNodeViewRenderer(CodeBlockComponent);
-            },
-          }).configure({
-            lowlight,
-            defaultLanguage: "plaintext",
           }),
           Table.configure({
             resizable: true,
@@ -413,7 +404,7 @@ export default {
       if (typeof this.diff !== "undefined") {
         var HtmlDiff = new Diff.Diff(true);
         HtmlDiff.tokenize = function (value) {
-          return value.replace(/<code[^>]*>/g, "<code>").split(/([{}:;,.]|<p>|<\/p>|<pre><code>|<\/code><\/pre>|<[uo]l><li>.*<\/li><\/[uo]l>|\s+)/);
+          return value.split(/([{}:;,.]|<p>|<\/p>|<pre><code>|<\/code><\/pre>|<[uo]l><li>.*<\/li><\/[uo]l>|\s+)/);
         };
         var value = this.value || "";
         var diff = HtmlDiff.diff(this.diff, value);
@@ -521,6 +512,29 @@ export default {
 
     h1 {
       font-size: 4.25rem;
+    }
+
+    pre {
+      padding: 0.7rem 1rem;
+      border-radius: 5px;
+      background: black;
+      color: white;
+      font-size: 0.8rem;
+      overflow-x: auto;
+      white-space: pre-wrap;
+
+      code {
+        display: block;
+      }
+    }
+
+    p code {
+      padding: 0.2rem 0.4rem;
+      border-radius: 5px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      background: rgba(black, 0.1);
+      color: rgba(black, 0.8);
     }
 
     ul,
@@ -715,9 +729,11 @@ export default {
     }
   }
 }
+
 .is-active {
   color: green;
 }
+
 .is-active-highlight {
   background-color: grey;
 }
@@ -729,6 +745,7 @@ export default {
 .diffrem {
   background-color: #fdb8c0;
 }
+
 pre .diffrem {
   background-color: $red-6;
 }
@@ -736,6 +753,7 @@ pre .diffrem {
 .diffadd {
   background-color: #acf2bd;
 }
+
 pre .diffadd {
   background-color: $green-6;
 }
