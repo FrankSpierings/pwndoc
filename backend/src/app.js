@@ -2,17 +2,17 @@ var fs = require('fs');
 var app = require('express')();
 
 var https = require('https').Server({
-  key: fs.readFileSync(__dirname+'/../ssl/server.key'),
-  cert: fs.readFileSync(__dirname+'/../ssl/server.cert'),
+  key: fs.readFileSync(__dirname + '/../ssl/server.key'),
+  cert: fs.readFileSync(__dirname + '/../ssl/server.cert'),
 
   // TLS Versions
-	maxVersion: 'TLSv1.3',
-	minVersion: 'TLSv1.2',
+  maxVersion: 'TLSv1.3',
+  minVersion: 'TLSv1.2',
 
-	// Hardened configuration
-	ciphers: 'ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384',
+  // Hardened configuration
+  ciphers: 'ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384',
 
-	honorCipherOrder: false
+  honorCipherOrder: false
 }, app);
 app.disable('x-powered-by');
 
@@ -61,7 +61,7 @@ io.on('connection', (socket) => {
   socket.on('join', (data) => {
     console.log(`user ${data.username.replace(/\n|\r/g, "")} joined room ${data.room.replace(/\n|\r/g, "")}`)
     socket.username = data.username;
-    do { socket.color = '#'+(0x1000000+(Math.random())*0xffffff).toString(16).substr(1,6); } while (socket.color === "#77c84e")
+    do { socket.color = '#' + (0x1000000 + (Math.random()) * 0xffffff).toString(16).substr(1, 6); } while (socket.color === "#77c84e")
     socket.join(data.room);
     io.to(data.room).emit('updateUsers');
   });
@@ -84,8 +84,8 @@ io.on('connection', (socket) => {
   })
   socket.on('menu', (data) => {
     socket.menu = data.menu;
-    (data.finding)? socket.finding = data.finding: delete socket.finding;
-    (data.section)? socket.section = data.section: delete socket.section;
+    (data.finding) ? socket.finding = data.finding : delete socket.finding;
+    (data.section) ? socket.section = data.section : delete socket.section;
     io.to(data.room).emit('updateUsers');
   })
   socket.on('disconnect', () => {
@@ -94,7 +94,7 @@ io.on('connection', (socket) => {
 });
 
 // CORS
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   // res.header("Access-Control-Allow-Origin", req.headers.origin);
   res.header("Access-Control-Allow-Methods", "GET,POST,DELETE,PUT,OPTIONS");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
@@ -104,12 +104,12 @@ app.use(function(req, res, next) {
 });
 
 // CSP
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   res.header("Content-Security-Policy", "default-src 'none'; form-action 'none'; base-uri 'self'; frame-ancestors 'none'; sandbox; require-trusted-types-for 'script';");
   next();
 });
 
-app.use(bodyParser.json({limit: '100mb'}));
+app.use(bodyParser.json({ limit: '100mb' }));
 app.use(bodyParser.urlencoded({
   limit: '10mb',
   extended: false // do not need to take care about images, videos -> false: only strings
@@ -129,8 +129,8 @@ require('./routes/data')(app);
 require('./routes/image')(app);
 require('./routes/settings')(app);
 
-app.get("*", function(req, res) {
-    res.status(404).json({"status": "error", "data": "Route undefined"});
+app.get("*", function (req, res) {
+  res.status(404).json({ "status": "error", "data": "Route undefined" });
 })
 
 // Start server

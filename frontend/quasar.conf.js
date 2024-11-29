@@ -33,7 +33,7 @@ module.exports = function (ctx) {
       // gzip: true,
       // analyze: true,
       // extractCSS: false,
-      extendWebpack (cfg) {
+      extendWebpack(cfg) {
         cfg.resolve.alias = {
           ...cfg.resolve.alias,
           '@': path.resolve(__dirname, '.', 'src')
@@ -49,14 +49,14 @@ module.exports = function (ctx) {
     },
     devServer: {
       https: {
-        key: fs.readFileSync(__dirname+'/ssl/server.key'),
-        cert: fs.readFileSync(__dirname+'/ssl/server.cert')
+        key: fs.readFileSync(__dirname + '/ssl/server.key'),
+        cert: fs.readFileSync(__dirname + '/ssl/server.cert')
       },
       host: "0.0.0.0",
       port: 8081,
       proxy: {
         '/api': {
-          target: 'https://pwndoc-backend:5252',
+          target: 'https://127.0.0.1:5252',
           changeOrigin: true,
           secure: false
         }
@@ -192,7 +192,7 @@ module.exports = function (ctx) {
     },
     electron: {
       // bundler: 'builder', // or 'packager'
-      extendWebpack (cfg) {
+      extendWebpack(cfg) {
         // do something with Electron process Webpack cfg
       },
       packager: {

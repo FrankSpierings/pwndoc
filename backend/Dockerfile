@@ -4,6 +4,7 @@ RUN mkdir -p /app
 WORKDIR /app
 COPY package*.json ./
 RUN apk --no-cache add --virtual builds-deps build-base python3 git
+RUN npm config set registry https://registry.npmjs.org/
 RUN npm install
 COPY . .
 EXPOSE 4242
