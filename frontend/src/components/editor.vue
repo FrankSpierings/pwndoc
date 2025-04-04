@@ -140,8 +140,7 @@
             <q-tooltip :delay="500" content-class="text-bold">Redo (Ctrl+Shift+Z)</q-tooltip>
             <q-icon name="redo" />
           </q-btn>
-
-          <<<<<<< Updated upstream=======<q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('table') !== -1" />
+          <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('table') !== -1" />
 
           <q-btn flat color="primary" dense>
             <q-icon name="fa fa-table" />
@@ -238,7 +237,6 @@
             <q-tooltip :delay="500" content-class="text-bold">Footnote</q-tooltip>
             <q-icon name="superscript" />
           </q-btn>
-          >>>>>>> Stashed changes
         </template>
         <div v-if="diff !== undefined && (diff || value) && value !== diff">
           <q-btn flat size="sm" dense :class="{ 'is-active': toggleDiff }" label="toggle diff" @click="toggleDiff = !toggleDiff" />
@@ -264,6 +262,7 @@ import CustomImage from "./editor-image";
 import Caption from "./editor-caption";
 import CustomHighlight from "./editor-highlight";
 import TrailingNode from "./editor-trailing-node";
+import Footnote from "./editor-footnote";
 import Table from "@tiptap/extension-table";
 import TableCell from "@tiptap/extension-table-cell";
 import TableHeader from "@tiptap/extension-table-header";
@@ -460,6 +459,13 @@ export default {
         this.html = "";
       }
       this.$emit("input", this.html);
+    },
+
+    addFootnote() {
+      const content = prompt("Enter footnote content (link):");
+      if (content) {
+        this.editor.chain().focus().addFootnote(content).run();
+      }
     },
   },
 };

@@ -2,7 +2,7 @@ import { Node } from '@tiptap/core';
 
 let isRecalculating = false; // Global flag to prevent recursion
 
-const Footnote = Node.create({  
+export default Node.create({
   name: 'footnote',
 
   group: 'inline',
@@ -29,7 +29,7 @@ const Footnote = Node.create({
         getAttrs: (dom) => {
           const id = dom.getAttribute('data-footnote');
           const content = dom.getAttribute('title');
-          return {id, content};
+          return { id, content };
         },
       },
     ];
@@ -43,14 +43,14 @@ const Footnote = Node.create({
     return {
       addFootnote:
         (content) =>
-        ({ chain }) => {
-          return chain()
-            .insertContent({
-              type: this.name,
-              attrs: { content }, // `id` will be recalculated automatically
-            })
-            .run();
-        },
+          ({ chain }) => {
+            return chain()
+              .insertContent({
+                type: this.name,
+                attrs: { content }, // `id` will be recalculated automatically
+              })
+              .run();
+          },
     };
   },
 
@@ -88,5 +88,3 @@ function recalculateFootnoteIds(editor) {
     }
   });
 }
-
-export default Footnote;
