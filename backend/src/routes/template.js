@@ -85,7 +85,7 @@ module.exports = function (app) {
                     Response.NotFound(res, 'Template File was not Found');
                 else
                     Response.Internal(res, err);
-            })
+            });
     });
 
     // Delete template

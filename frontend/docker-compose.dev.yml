@@ -1,8 +1,7 @@
-version: '3'
 services:
 
   pwndoc-frontend-dev:
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile.dev
     image: yeln4ts/pwndoc:frontend-dev

@@ -537,11 +537,11 @@ module.exports = function (app, io) {
                     })
                     .catch((err) => {
                         Response.Internal(res, err);
-                    })
+                    });
             })
             .catch((err) => {
                 Response.Internal(res, err);
-            })
+            });
     });
 
     // Sets the audit state to EDIT or REVIEW
