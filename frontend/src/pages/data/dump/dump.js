@@ -1,5 +1,4 @@
 import { Dialog, Notify } from 'quasar'
-import Vue from 'vue'
 import YAML from 'js-yaml'
 
 import VulnerabilityService from '@/services/vulnerability'
@@ -15,67 +14,67 @@ export default {
         }
     },
 
-    mounted: function() {
-        
+    mounted: function () {
+
     },
 
     methods: {
-        getVulnerabilities: function() {
+        getVulnerabilities: function () {
             this.vulnerabilities = [];
             VulnerabilityService.exportVulnerabilities()
-            .then((data) => {
-                this.vulnerabilities = data.data.datas;
-                this.downloadVulnerabilities();
-            })
-            .catch((err) => {
-                Notify.create({
-                    message: err.response.data.datas,
-                    color: 'negative',
-                    textColor:'white',
-                    position: 'top-right'
+                .then((data) => {
+                    this.vulnerabilities = data.data.datas;
+                    this.downloadVulnerabilities();
                 })
-            })
+                .catch((err) => {
+                    Notify.create({
+                        message: err.response.data.datas,
+                        color: 'negative',
+                        textColor: 'white',
+                        position: 'top-right'
+                    })
+                })
         },
 
-        createVulnerabilities: function() {
+        createVulnerabilities: function () {
             VulnerabilityService.createVulnerabilities(this.vulnerabilities)
-            .then((data) => {
-                var message = "";
-                var color = "positive";
-                if (data.data.datas.duplicates === 0) {
-                    message = $t('importVulnerabilitiesOk',[data.data.datas.created]);
-                }
-                else if (data.data.datas.created === 0 && data.data.datas.duplicates > 0) {
-                    message = $t('importVulnerabilitiesAllExists',[data.data.datas.duplicates.length]);
-                    color = "negative";
-                }
-                else {
-                    message = $t('importVulnerabilitiesPartial',[data.data.datas.created,data.data.datas.duplicates.length]);
-                    color = "orange";
-                }
-                Notify.create({
-                    message: message,
-                    html: true,
-                    closeBtn: 'x',
-                    color: color,
-                    textColor:'white',
-                    position: 'top-right'
+                .then((data) => {
+                    var message = "";
+                    var color = "positive";
+                    if (data.data.datas.duplicates === 0) {
+                        message = $t('importVulnerabilitiesOk', [data.data.datas.created]);
+                    }
+                    else if (data.data.datas.created === 0 && data.data.datas.duplicates > 0) {
+                        message = $t('importVulnerabilitiesAllExists', [data.data.datas.duplicates.length]);
+                        color = "negative";
+                    }
+                    else {
+                        message = $t('importVulnerabilitiesPartial', [data.data.datas.created, data.data.datas.duplicates.length]);
+                        color = "orange";
+                    }
+                    Notify.create({
+                        message: message,
+                        html: true,
+                        closeBtn: 'x',
+                        color: color,
+                        textColor: 'white',
+                        position: 'top-right'
+                    })
                 })
-            })
-            .catch((err) => {
-                Notify.create({
-                    message: err.response.data.datas,
-                    color: 'negative',
-                    textColor: 'white',
-                    position: 'top-right'
+                .catch((err) => {
+                    Notify.create({
+                        message: err.response.data.datas,
+                        color: 'negative',
+                        textColor: 'white',
+                        position: 'top-right'
+                    })
                 })
-            })
         },
 
-        importVulnerabilities: function(files) {
+        importVulnerabilities: function (files) {
             this.vulnerabilities = [];
             var pending = 0;
-            for (var i=0; i<files.length; i++) {
+            for (var i = 0; i < files.length; i++) {
                 ((file) => {
                     var fileReader = new FileReader();
                     fileReader.onloadend = (e) => {
@@ -101,12 +100,12 @@ export default {
                                         this.vulnerabilities.push(vulnFile);
                                 }
                                 else
-                                    throw new Error ($t('invalidYamlFormat'))
+                                    throw new Error($t('invalidYamlFormat'))
                             }
-                            catch(err) {
+                            catch (err) {
                                 console.log(err);
                                 var errMsg = err;
-                                if (err.mark) errMsg = $t('err.parsingError2',[err.mark.line,err.mark.column]);                              
+                                if (err.mark) errMsg = $t('err.parsingError2', [err.mark.line, err.mark.column]);
                                 Notify.create({
                                     message: errMsg,
                                     color: 'negative',
@@ -130,12 +129,12 @@ export default {
                                         this.vulnerabilities.push(vulnFile);
                                 }
                                 else
-                                    throw new Error ($t('err.invalidJsonFormat'))
+                                    throw new Error($t('err.invalidJsonFormat'))
                             }
-                            catch(err) {
+                            catch (err) {
                                 console.log(err);
                                 var errMsg = err;
-                                if (err.message) errMsg = $t('err.parsingError1',[err.message]);
+                                if (err.message) errMsg = $t('err.parsingError1', [err.message]);
                                 Notify.create({
                                     message: errMsg,
                                     color: 'negative',
@@ -156,7 +155,7 @@ export default {
             }
         },
 
-        parseSerpico: function(vulnerabilities) {
+        parseSerpico: function (vulnerabilities) {
             var result = [];
             vulnerabilities.forEach(vuln => {
                 var tmpVuln = {};
@@ -176,14 +175,14 @@ export default {
                     details.references = vuln.references.split('</paragraph>').filter(Boolean)
                 }
                 tmpVuln.details = [details];
-                
+
                 result.push(tmpVuln);
             });
-            
+
             return result;
         },
 
-        formatSerpicoText: function(str) {
+        formatSerpicoText: function (str) {
             if (!str) return null
             if (str === 'English') return 'en'
             if (str === 'French') return 'fr'
@@ -218,9 +217,9 @@ export default {
             return res
         },
 
-        downloadVulnerabilities: function() {
+        downloadVulnerabilities: function () {
             var data = YAML.dump(this.vulnerabilities);
-            var blob = new Blob([data], {type: 'application/yaml'});
+            var blob = new Blob([data], { type: 'application/yaml' });
             var url = URL.createObjectURL(blob);
             var a = document.createElement('a');
             a.href = url;
@@ -229,35 +228,35 @@ export default {
             a.click();
             URL.revokeObjectURL(url);
             document.body.removeChild(a);
-            
+
         },
 
-        deleteAllVulnerabilities: function() {
+        deleteAllVulnerabilities: function () {
             Dialog.create({
                 title: $t('msg.confirmSuppression'),
                 message: $t('msg.allVulnerabilitesDeleteNotice'),
-                ok: {label: $t('btn.confirm'), color: 'negative'},
-                cancel: {label: $t('btn.cancel'), color: 'white'}
+                ok: { label: $t('btn.confirm'), color: 'negative' },
+                cancel: { label: $t('btn.cancel'), color: 'white' }
             })
-            .onOk(() => {
-                VulnerabilityService.deleteAllVulnerabilities()
-                .then(() => {
-                    Notify.create({
-                        message: $t('msg.allVulnerabilitesDeleteOk'),
-                        color: 'positive',
-                        textColor:'white',
-                        position: 'top-right'
-                    })
+                .onOk(() => {
+                    VulnerabilityService.deleteAllVulnerabilities()
+                        .then(() => {
+                            Notify.create({
+                                message: $t('msg.allVulnerabilitesDeleteOk'),
+                                color: 'positive',
+                                textColor: 'white',
+                                position: 'top-right'
+                            })
+                        })
+                        .catch((err) => {
+                            Notify.create({
+                                message: err.response.data.datas,
+                                color: 'negative',
+                                textColor: 'white',
+                                position: 'top-right'
+                            })
+                        })
                 })
-                .catch((err) => {
-                    Notify.create({
-                        message: err.response.data.datas,
-                        color: 'negative',
-                        textColor: 'white',
-                        position: 'top-right'
-                    })
-                })
-            })
         }
     }
 }

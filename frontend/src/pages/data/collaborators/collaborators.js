@@ -1,5 +1,4 @@
-import { Dialog, Notify } from 'quasar';
-import Vue from 'vue'
+import { Notify } from 'quasar';
 
 import CollabService from '@/services/collaborator'
 import UserService from '@/services/user'
@@ -18,12 +17,12 @@ export default {
             loading: true,
             // Datatable headers
             dtHeaders: [
-                {name: 'username', label: $t('username'), field: 'username', align: 'left', sortable: true},
-                {name: 'firstname', label: $t('firstname'), field: 'firstname', align: 'left', sortable: true},
-                {name: 'lastname', label: $t('lastname'), field: 'lastname', align: 'left', sortable: true},
-                {name: 'email', label: $t('email'), field: 'email', align: 'left', sortable: true},
-                {name: 'role', label: $t('role'), field: 'role', align: 'left', sortable: true},
-                {name: 'action', label: '', field: 'action', align: 'left', sortable: false},
+                { name: 'username', label: $t('username'), field: 'username', align: 'left', sortable: true },
+                { name: 'firstname', label: $t('firstname'), field: 'firstname', align: 'left', sortable: true },
+                { name: 'lastname', label: $t('lastname'), field: 'lastname', align: 'left', sortable: true },
+                { name: 'email', label: $t('email'), field: 'email', align: 'left', sortable: true },
+                { name: 'role', label: $t('role'), field: 'role', align: 'left', sortable: true },
+                { name: 'action', label: '', field: 'action', align: 'left', sortable: false },
             ],
             // Datatable pagination
             pagination: {
@@ -32,20 +31,20 @@ export default {
                 sortBy: 'username'
             },
             rowsPerPageOptions: [
-                {label:'25', value:25},
-                {label:'50', value:50},
-                {label:'100', value:100},
-                {label:'All', value:0}
+                { label: '25', value: 25 },
+                { label: '50', value: 50 },
+                { label: '100', value: 100 },
+                { label: 'All', value: 0 }
             ],
             // Search filter
-            search: {username: '', firstname: '', lastname: '', role: '', email: '', enabled: true},
+            search: { username: '', firstname: '', lastname: '', role: '', email: '', enabled: true },
             customFilter: Utils.customFilter,
             // Errors messages
-            errors: {lastname: '', firstname: '', username: ''},
+            errors: { lastname: '', firstname: '', username: '' },
             // Collab to create or update
             currentCollab: {
-                lastname: '', 
-                firstname: '', 
+                lastname: '',
+                firstname: '',
                 username: '',
                 role: '',
                 email: '',
@@ -61,25 +60,25 @@ export default {
         }
     },
 
-    mounted: function() {
+    mounted: function () {
         this.getCollabs()
         this.getRoles()
     },
 
     methods: {
-        getCollabs: function() {
+        getCollabs: function () {
             this.loading = true
             CollabService.getCollabs()
-            .then((data) => {
-                this.collabs = data.data.datas
-                this.loading = false
-            })
-            .catch((err) => {
-                console.log(err)
-            })
+                .then((data) => {
+                    this.collabs = data.data.datas
+                    this.loading = false
+                })
+                .catch((err) => {
+                    console.log(err)
+                })
         },
 
-        createCollab: function() {
+        createCollab: function () {
             this.cleanErrors();
             if (!this.currentCollab.lastname)
                 this.errors.lastname = $t('msg.lastnameRequired');
@@ -94,27 +93,27 @@ export default {
                 return;
 
             CollabService.createCollab(this.currentCollab)
-            .then(() => {
-                this.getCollabs();
-                this.$refs.createModal.hide();
-                Notify.create({
-                    message: $t('msg.collaboratorCreatedOk'),
-                    color: 'positive',
-                    textColor:'white',
-                    position: 'top-right'
+                .then(() => {
+                    this.getCollabs();
+                    this.$refs.createModal.hide();
+                    Notify.create({
+                        message: $t('msg.collaboratorCreatedOk'),
+                        color: 'positive',
+                        textColor: 'white',
+                        position: 'top-right'
+                    })
                 })
-            })
-            .catch((err) => {
-                Notify.create({
-                    message: err.response.data.datas,
-                    color: 'negative',
-                    textColor:'white',
-                    position: 'top-right'
+                .catch((err) => {
+                    Notify.create({
+                        message: err.response.data.datas,
+                        color: 'negative',
+                        textColor: 'white',
+                        position: 'top-right'
+                    })
                 })
-            })
         },
 
-        updateCollab: function() {
+        updateCollab: function () {
             this.cleanErrors();
             if (!this.currentCollab.lastname)
                 this.errors.lastname = $t('msg.lastnameRequired');
@@ -125,51 +124,51 @@ export default {
 
             if (this.errors.lastname || this.errors.firstname || this.errors.username || !this.$refs.pwdUpdateRef.validate())
                 return;
-            
+
             CollabService.updateCollab(this.idUpdate, this.currentCollab)
-            .then(() => {
-                this.getCollabs();
-                this.$refs.editModal.hide();
-                Notify.create({
-                    message: $t('msg.collaboratorUpdatedOk'),
-                    color: 'positive',
-                    textColor:'white',
-                    position: 'top-right'
+                .then(() => {
+                    this.getCollabs();
+                    this.$refs.editModal.hide();
+                    Notify.create({
+                        message: $t('msg.collaboratorUpdatedOk'),
+                        color: 'positive',
+                        textColor: 'white',
+                        position: 'top-right'
+                    })
                 })
-            })
-            .catch((err) => {
-                Notify.create({
-                    message: err.response.data.datas,
-                    color: 'negative',
-                    textColor:'white',
-                    position: 'top-right'
+                .catch((err) => {
+                    Notify.create({
+                        message: err.response.data.datas,
+                        color: 'negative',
+                        textColor: 'white',
+                        position: 'top-right'
+                    })
                 })
-            })
         },
 
-        getRoles: function() {
+        getRoles: function () {
             DataService.getRoles()
-            .then((data) => {
-                this.roles = data.data.datas
-            })
-            .catch((err) => {
-                console.log(err)
-            })
+                .then((data) => {
+                    this.roles = data.data.datas
+                })
+                .catch((err) => {
+                    console.log(err)
+                })
         },
 
-        clone: function(row) {
+        clone: function (row) {
             this.currentCollab = this.$_.clone(row);
             this.idUpdate = row._id;
         },
 
-        cleanErrors: function() {
+        cleanErrors: function () {
             this.errors.lastname = '';
             this.errors.firstname = '';
             this.errors.username = '';
             this.errors.password = '';
         },
 
-        cleanCurrentCollab: function() {
+        cleanCurrentCollab: function () {
             this.currentCollab.lastname = '';
             this.currentCollab.firstname = '';
             this.currentCollab.username = '';
@@ -179,11 +178,11 @@ export default {
             this.currentCollab.phone = '';
         },
 
-        dblClick: function(evt, row) {
+        dblClick: function (evt, row) {
             if (this.UserService.isAllowed('users:updates')) {
                 this.clone(row)
-                this.$refs.editModal.show()  
-            }     
+                this.$refs.editModal.show()
+            }
         }
     }
 }

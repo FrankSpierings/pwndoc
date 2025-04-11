@@ -48,7 +48,7 @@ export default {
 
     // Hook to enable image sources not having a valid URL.
     DOMPurify.addHook('uponSanitizeAttribute', function (node, data, config) {
-      data.keepAttr = false // default to remove any attribute
+      data.keepAttr = false; // default to remove any attribute
 
       // Filter authorized attributes for <img> tags (<img src="..." alt="...">)
       if (node.tagName === 'IMG') {

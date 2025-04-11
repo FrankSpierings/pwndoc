@@ -77,7 +77,7 @@ module.exports = function (app, io) {
 
         Audit.create(audit, req.decodedToken.id)
             .then(inserted => Response.Created(res, { message: 'Audit created successfully', audit: inserted }))
-            .catch(err => Response.Internal(res, err))
+            .catch(err => Response.Internal(res, err));
     });
 
     // Get audits children

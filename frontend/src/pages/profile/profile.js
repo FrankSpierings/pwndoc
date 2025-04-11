@@ -1,5 +1,4 @@
-import { Dialog, Notify } from 'quasar'
-import Vue from 'vue'
+import { Notify } from 'quasar'
 
 import UserService from '@/services/user'
 import Utils from '@/services/utils'
@@ -14,41 +13,41 @@ export default {
             totpQrcode: "",
             totpSecret: "",
             totpToken: "",
-            errors: {username: "", firstname:"", lastname: "", currentPassword: "", newPassword: ""}
+            errors: { username: "", firstname: "", lastname: "", currentPassword: "", newPassword: "" }
         }
     },
 
-    mounted: function() {
+    mounted: function () {
         this.getProfile();
     },
 
     methods: {
-        getProfile: function() {
+        getProfile: function () {
             UserService.getProfile()
-            .then((data) => {
-                this.user = data.data.datas;
-                this.totpEnabled = this.user.totpEnabled;
-            })
-            .catch((err) => {
-                console.log(err)
-            })
+                .then((data) => {
+                    this.user = data.data.datas;
+                    this.totpEnabled = this.user.totpEnabled;
+                })
+                .catch((err) => {
+                    console.log(err)
+                })
         },
 
-        getTotpQrcode: function() {
-            if(this.totpEnabled && !this.user.totpEnabled){
+        getTotpQrcode: function () {
+            if (this.totpEnabled && !this.user.totpEnabled) {
                 UserService.getTotpQrCode()
-                .then((data)=>{
-                    let res = data.data.datas;
-                    this.totpQrcode = res.totpQrCode;
-                    this.totpSecret = res.totpSecret;
-                    this.$refs.totpEnableInput.focus();
-                })
-                .catch((err)=>{
-                    console.log(err);
-                })
+                    .then((data) => {
+                        let res = data.data.datas;
+                        this.totpQrcode = res.totpQrCode;
+                        this.totpSecret = res.totpSecret;
+                        this.$refs.totpEnableInput.focus();
+                    })
+                    .catch((err) => {
+                        console.log(err);
+                    })
             }
             else if (!this.totpEnabled && this.user.totpEnabled) {
-                this.$nextTick(() => {this.$refs.totpDisableInput.focus()})
+                this.$nextTick(() => { this.$refs.totpDisableInput.focus() })
             }
             else {
                 this.totpQrcode = "";
@@ -57,51 +56,51 @@ export default {
             }
         },
 
-        setupTotp: function() {
+        setupTotp: function () {
             UserService.setupTotp(this.totpToken, this.totpSecret)
-            .then((data)=>{
-                this.user.totpEnabled = true;
-                this.totpToken = "";
-                Notify.create({
-                    message: 'TOTP successfully enabled',
-                    color: 'positive',
-                    textColor:'white',
-                    position: 'top-right'
+                .then((data) => {
+                    this.user.totpEnabled = true;
+                    this.totpToken = "";
+                    Notify.create({
+                        message: 'TOTP successfully enabled',
+                        color: 'positive',
+                        textColor: 'white',
+                        position: 'top-right'
+                    })
                 })
-            })
-            .catch((err)=>{
-                Notify.create({
-                    message: 'TOTP verification failed',
-                    color: 'negative',
-                    textColor: 'white',
-                    position: 'top-right'
+                .catch((err) => {
+                    Notify.create({
+                        message: 'TOTP verification failed',
+                        color: 'negative',
+                        textColor: 'white',
+                        position: 'top-right'
+                    })
                 })
-            })
         },
 
-        cancelTotp: function() {
+        cancelTotp: function () {
             UserService.cancelTotp(this.totpToken)
-            .then(()=>{
-                this.user.totpEnabled = false;
-                this.totpToken = "";
-                Notify.create({
-                    message: 'TOTP successfully disabled',
-                    color: 'positive',
-                    textColor:'white',
-                    position: 'top-right'
+                .then(() => {
+                    this.user.totpEnabled = false;
+                    this.totpToken = "";
+                    Notify.create({
+                        message: 'TOTP successfully disabled',
+                        color: 'positive',
+                        textColor: 'white',
+                        position: 'top-right'
+                    })
                 })
-            })
-            .catch(()=>{
-                Notify.create({
-                    message: 'TOTP verification failed',
-                    color: 'negative',
-                    textColor: 'white',
-                    position: 'top-right'
+                .catch(() => {
+                    Notify.create({
+                        message: 'TOTP verification failed',
+                        color: 'negative',
+                        textColor: 'white',
+                        position: 'top-right'
+                    })
                 })
-            })
         },
 
-        updateProfile: function() {
+        updateProfile: function () {
             this.cleanErrors();
             if (!this.user.username)
                 this.errors.username = $t('msg.usernameRequired');
@@ -115,31 +114,31 @@ export default {
                 this.errors.newPassword = $t('msg.confirmPasswordDifferents');
             if (this.user.newPassword && Utils.strongPassword(this.user.newPassword) !== true)
                 this.errors.newPassword = $t('msg.passwordComplexity')
-            
+
             if (this.errors.username || this.errors.firstname || this.errors.lastname || this.errors.currentPassword || this.errors.newPassword)
                 return;
 
             UserService.updateProfile(this.user)
-            .then((data) => {
-                UserService.refreshToken()
-                Notify.create({
-                    message: $t('msg.profileUpdateOk'),
-                    color: 'positive',
-                    textColor:'white',
-                    position: 'top-right'
+                .then((data) => {
+                    UserService.refreshToken()
+                    Notify.create({
+                        message: $t('msg.profileUpdateOk'),
+                        color: 'positive',
+                        textColor: 'white',
+                        position: 'top-right'
+                    })
                 })
-            })
-            .catch((err) => {
-                Notify.create({
-                    message: err.response.data.datas,
-                    color: 'negative',
-                    textColor: 'white',
-                    position: 'top-right'
+                .catch((err) => {
+                    Notify.create({
+                        message: err.response.data.datas,
+                        color: 'negative',
+                        textColor: 'white',
+                        position: 'top-right'
+                    })
                 })
-            })
         },
 
-        cleanErrors: function() {
+        cleanErrors: function () {
             this.errors.username = '';
             this.errors.firstname = '';
             this.errors.lastname = '';

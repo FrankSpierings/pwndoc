@@ -1,11 +1,5 @@
 var expressions = require('angular-expressions');
 
-// Apply all customs functions
-function apply(data) {
-
-}
-exports.apply = apply;
-
 // *** Custom modifications of audit data for usage in word template
 
 
@@ -14,7 +8,7 @@ exports.apply = apply;
 var filters = {};
 
 // Convert input CVSS criteria into French: {input | criteriaFR}
-expressions.filters.criteriaFR = function(input) {
+expressions.filters.criteriaFR = function (input) {
     var result = "Non défini"
 
     if (input === "Network") result = "Réseau"
@@ -32,9 +26,9 @@ expressions.filters.criteriaFR = function(input) {
 }
 
 // Convert input date with parameter s (full,short): {input | convertDate: 's'}
-expressions.filters.convertDateFR = function(input, s) {
+expressions.filters.convertDateFR = function (input, s) {
     var date = new Date(input);
-    if (date !== "Invalid Date") {
+    if (!isNaN(date)) {
         var monthsFull = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
         var monthsShort = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"];
         var days = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
@@ -42,13 +36,12 @@ expressions.filters.convertDateFR = function(input, s) {
         var month = date.getUTCMonth();
         var year = date.getUTCFullYear();
         if (s === "full") {
-            return days[date.getUTCDay()] + " " + (day<10 ? '0'+day: day) + " " + monthsFull[month] + " " + year;
+            return days[date.getUTCDay()] + " " + (day < 10 ? '0' + day : day) + " " + monthsFull[month] + " " + year;
         }
         if (s === "short") {
-            return (day<10 ? '0'+day: day) + "/" + monthsShort[month] + "/" + year;
+            return (day < 10 ? '0' + day : day) + "/" + monthsShort[month] + "/" + year;
         }
     }
 }
 
 exports.expressions = expressions
-
