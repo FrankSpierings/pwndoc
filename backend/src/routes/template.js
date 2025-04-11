@@ -60,10 +60,10 @@ module.exports = function (app) {
 
         var template = {};
         // Required parameters
-        template.name = req.body.name;
+        template.name = String(req.body.name);
 
         // Optional parameters
-        if (req.body.file && req.body.ext) template.ext = req.body.ext;
+        if (req.body.file && req.body.ext) template.ext = String(req.body.ext);
 
         Template.update(req.params.templateId, template)
             .then(data => {
