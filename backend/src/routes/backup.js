@@ -1,4 +1,4 @@
-module.exports = function(app) {
+module.exports = function (app) {
     const fs = require('fs')
     const path = require('path')
     const tar = require('tar-stream')
@@ -40,16 +40,16 @@ module.exports = function(app) {
     const VulnerabilityCategory = require('mongoose').model('VulnerabilityCategory');
     const VulnerabilityType = require('mongoose').model('VulnerabilityType');
     const VulnerabilityUpdate = require('mongoose').model('VulnerabilityUpdate');
- 
+
     function getBackupState() {
         try {
             const state = fs.readFileSync(`${backupPath}/.state`, 'utf8')
             if (state.split('\n').length > 1)
-                return {state: state.split('\n')[0].trim(), message: state.split('\n').slice(1).join('\n').trim()}
+                return { state: state.split('\n')[0].trim(), message: state.split('\n').slice(1).join('\n').trim() }
             else
-                return {state: state, message: ''}
+                return { state: state, message: '' }
         }
-        catch(error) {
+        catch (error) {
             if (error.code === 'ENOENT') {
                 fs.writeFileSync(`${backupPath}/.state`, STATE_IDLE)
                 return STATE_IDLE
@@ -72,9 +72,9 @@ module.exports = function(app) {
 
     function readBackupInfo(file) {
         return new Promise((resolve, reject) => {
-            const fileStats = fs.statSync(`${backupPath}/${file}`)
+            const fileStats = fs.statSync(`${backupPath}/${path.basename(file)}`)
 
-            const readStream = fs.createReadStream(`${backupPath}/${file}`)
+            const readStream = fs.createReadStream(`${backupPath}/${path.basename(file)}`)
             const extract = tar.extract()
 
             extract.on('entry', (header, stream, next) => {
@@ -84,7 +84,7 @@ module.exports = function(app) {
                     stream.on('data', (chunk) => {
                         jsonData += chunk
                     })
-                    
+
                     stream.on('end', () => {
                         try {
                             jsonData = JSON.parse(jsonData)
@@ -97,7 +97,7 @@ module.exports = function(app) {
                             else
                                 reject(new Error('Wrong backup.json structure'))
                         }
-                        catch(error) {
+                        catch (error) {
                             reject(new Error('Wrong JSON data in backup.json'))
                         }
                     })
@@ -113,12 +113,12 @@ module.exports = function(app) {
             extract.on('finish', () => {
                 reject(new Error('No backup.json file found in archive'))
             })
-        
+
             readStream
-            .pipe(zlib.createGunzip())
-            .on('error', err => reject(new Error('Wrong backup file')))
-            .pipe(extract)
-            .on('error', err => reject(new Error('Wrong backup file')))
+                .pipe(zlib.createGunzip())
+                .on('error', err => reject(new Error('Wrong backup file')))
+                .pipe(extract)
+                .on('error', err => reject(new Error('Wrong backup file')))
         })
     }
 
@@ -133,14 +133,14 @@ module.exports = function(app) {
                 }
             })
             Promise.allSettled(promises)
-            .then(results => {
-                results.forEach(e => {
-                    if (e.status === 'fulfilled') {
-                        backupList.push(e.value)
-                    }
+                .then(results => {
+                    results.forEach(e => {
+                        if (e.status === 'fulfilled') {
+                            backupList.push(e.value)
+                        }
+                    })
+                    resolve(backupList)
                 })
-                resolve(backupList)
-            })
         })
     }
 
@@ -154,30 +154,30 @@ module.exports = function(app) {
                 }
             })
             Promise.allSettled(promises)
-            .then(results => {
-                const result = results.find(e => e.status === 'fulfilled' && e.value.slug === slug)
-                resolve(result.value.filename)
-            })
+                .then(results => {
+                    const result = results.find(e => e.status === 'fulfilled' && e.value.slug === slug)
+                    resolve(result.value.filename)
+                })
         })
     }
 
     // Get Backups list
-    app.get("/api/backups", acl.hasPermission('backups:read'), async function(req, res) {
+    app.get("/api/backups", acl.hasPermission('backups:read'), async function (req, res) {
         const msg = await getBackupList()
         Response.Ok(res, msg)
     });
 
     // Get Backups status - return backup state
-    app.get("/api/backups/status", acl.hasPermission('backups:read'), function(req, res) {
+    app.get("/api/backups/status", acl.hasPermission('backups:read'), function (req, res) {
         const state = getBackupState()
-        let response = {operation: 'idle', state: state.state, message: state.message}
+        let response = { operation: 'idle', state: state.state, message: state.message }
         if ([
-            STATE_BACKUP_STARTED, 
-            STATE_DUMPING_DATABASE, 
-            STATE_BUILDING_DATA, 
-            STATE_ENCRYPTING_DATA, 
+            STATE_BACKUP_STARTED,
+            STATE_DUMPING_DATABASE,
+            STATE_BUILDING_DATA,
+            STATE_ENCRYPTING_DATA,
             STATE_BUILDING_ARCHIVE,
-            
+
         ].includes(state.state))
             response.operation = 'backup'
         else if ([
@@ -191,14 +191,14 @@ module.exports = function(app) {
         else if ([
             STATE_BACKUP_ERROR,
             STATE_RESTORE_ERROR
-        ].includes(state.state)) 
+        ].includes(state.state))
             response.operation = 'idle'
 
         Response.Ok(res, response)
     });
 
     // Download backup file
-    app.get("/api/backups/download/:slug", acl.hasPermission('backups:read'), async function(req, res) {
+    app.get("/api/backups/download/:slug", acl.hasPermission('backups:read'), async function (req, res) {
         const filenames = fs.readdirSync(backupPath)
         let found = false
         const { resolve } = require('path')
@@ -207,7 +207,7 @@ module.exports = function(app) {
         filenames.forEach(file => {
             if (file === `${filename}`) {
                 found = true
-                const filePath = `${backupPath}/${filename}`
+                const filePath = `${backupPath}/${path.basename(filename)}`
                 const fileStats = fs.statSync(filePath)
                 const fileSize = fileStats.size
 
@@ -223,9 +223,9 @@ module.exports = function(app) {
         }
     });
 
-    
+
     // Upload backup file
-    app.post("/api/backups/upload", acl.hasPermission('backups:create'), function(req, res) {
+    app.post("/api/backups/upload", acl.hasPermission('backups:create'), function (req, res) {
         const fileSize = req.headers['content-length'] || 0
         const diskUsage = diskusage.checkSync('/')
         const maxFileSize = diskUsage.available - (1024 * 1024 * 1024) // Free space - 1GB
@@ -249,15 +249,15 @@ module.exports = function(app) {
                 if (file.mimetype === 'application/x-tar' && file.originalname.endsWith('.tar'))
                     cb(null, true);
                 else if (utils.validFilename(path.basename(file.originalname)))
-                    cb({fn: 'BadParameters', message: 'Invalid characters in filename'})
+                    cb({ fn: 'BadParameters', message: 'Invalid characters in filename' })
                 else
-                    cb({fn: 'BadParameters', message:'Only .tar archives are allowed'})
+                    cb({ fn: 'BadParameters', message: 'Only .tar archives are allowed' })
             },
             limits: {
                 fileSize: maxFileSize
-            }    
+            }
         }).single('file')
-        
+
         upload(req, res, (err) => {
             if (err instanceof multer.MulterError) {
                 Response.BadParameters(res, err);
@@ -268,25 +268,25 @@ module.exports = function(app) {
             else {
                 // Check if file is a valid backup file
                 readBackupInfo(req.file.originalname)
-                .then(result => {
-                    Response.Created(res, result)
-                })
-                .catch(error => {
-                    fs.rmSync(`${backupPath}/${req.file.originalname}`, {force: true})
-                    Response.BadParameters(res, error.message)
-                })
+                    .then(result => {
+                        Response.Created(res, result)
+                    })
+                    .catch(error => {
+                        fs.rmSync(`${backupPath}/${path.basename(req.file.originalname)}`, { force: true })
+                        Response.BadParameters(res, error.message)
+                    })
             }
         })
     });
 
     // Delete Backup
-    app.delete("/api/backups/:slug", acl.hasPermission('backups:delete'), async function(req, res) {
+    app.delete("/api/backups/:slug", acl.hasPermission('backups:delete'), async function (req, res) {
         const filenames = fs.readdirSync(backupPath)
         let deleted = false
         const filename = await getBackupFilename(req.params.slug)
         filenames.forEach(file => {
             if (file === `${filename}`) {
-                fs.rmSync(`${backupPath}/${file}`, {force: true})
+                fs.rmSync(`${backupPath}/${file}`, { force: true })
                 deleted = true
             }
         })
@@ -297,7 +297,7 @@ module.exports = function(app) {
     });
 
     // Create Backup
-    app.post("/api/backups", acl.hasPermission('backups:create'), function(req, res) {
+    app.post("/api/backups", acl.hasPermission('backups:create'), function (req, res) {
         if (![STATE_IDLE, STATE_BACKUP_ERROR, STATE_RESTORE_ERROR].includes(getBackupState().state)) {
             Response.Processing(res, 'Operation already in progress')
             return
@@ -306,7 +306,7 @@ module.exports = function(app) {
         setBackupState(STATE_BACKUP_STARTED)
         console.log('backup started')
         const date = new Date()
-        const [filename] = date.toISOString().replaceAll('-','').replaceAll(':','').split('.')
+        const [filename] = date.toISOString().replaceAll('-', '').replaceAll(':', '').split('.')
         const allData = [
             "Audits",
             "Vulnerabilities",
@@ -341,7 +341,7 @@ module.exports = function(app) {
         if (req.body.name && utils.validFilename(req.body.name))
             backup.name = req.body.name
         else
-            backup.name = `${backup.type} - ${date.toLocaleDateString("en-us", {year: "numeric", month: "short", day: "2-digit"})}`
+            backup.name = `${backup.type} - ${date.toLocaleDateString("en-us", { year: "numeric", month: "short", day: "2-digit" })}`
         if (req.body.password)
             backup.protected = true
 
@@ -375,12 +375,12 @@ module.exports = function(app) {
             if (e === "Companies") {
                 backupPromises.push(Company.backup(backupTmpPath));
             }
-            
+
             // Templates
             if (e === "Templates") {
                 backupPromises.push(Template.backup(backupTmpPath))
             }
-            
+
             // Custom Data
             if (e === "Audit Types") {
                 backupPromises.push(AuditType.backup(backupTmpPath))
@@ -397,7 +397,7 @@ module.exports = function(app) {
             if (e === "Vulnerability Categories") {
                 backupPromises.push(VulnerabilityCategory.backup(backupTmpPath))
             }
-            
+
             // Settings
             if (e === "Settings") {
                 backupPromises.push(Settings.backup(backupTmpPath))
@@ -411,86 +411,86 @@ module.exports = function(app) {
         console.log('Dumping database')
 
         Promise.allSettled(backupPromises)
-        .then(async results => {
-            setBackupState(STATE_BUILDING_DATA)
-            console.log('Building data archive')
-            let errors = []
-            results.forEach(e => {
-                if (e.status === 'rejected')
-                    errors.push(e.reason)
-            })
+            .then(async results => {
+                setBackupState(STATE_BUILDING_DATA)
+                console.log('Building data archive')
+                let errors = []
+                results.forEach(e => {
+                    if (e.status === 'rejected')
+                        errors.push(e.reason)
+                })
 
-            if (errors.length === 0) {
-                const archiver = require('archiver')
-                
-                // Create Data archive (from tmp directory)
-                const outputArchiveData = fs.createWriteStream(`${backupPath}/data.tar.gz`)
-                const archiveData = archiver('tar', {gzip: true})
-                archiveData.pipe(outputArchiveData)
-                archiveData.directory(`${backupTmpPath}`, false)
-                await archiveData.finalize()
+                if (errors.length === 0) {
+                    const archiver = require('archiver')
 
-                outputArchiveData.on('close', async function() {
-                    console.log('archive data closed');
+                    // Create Data archive (from tmp directory)
+                    const outputArchiveData = fs.createWriteStream(`${backupPath}/data.tar.gz`)
+                    const archiveData = archiver('tar', { gzip: true })
+                    archiveData.pipe(outputArchiveData)
+                    archiveData.directory(`${backupTmpPath}`, false)
+                    await archiveData.finalize()
 
-                    // Create final archive
-                    console.log('Creating final archive')
-                    const outputArchive = fs.createWriteStream(`${backupPath}/${filename}.tar`)
-                    const archive = archiver('tar', {gzip: true})
-                    archive.pipe(outputArchive)
-                    archive.append(JSON.stringify(backup, null, 2), {name: 'backup.json'})
-                    if (req.body.password) {
-                        setBackupState(STATE_ENCRYPTING_DATA)
-                        console.log('starting data archive encryption')
-                        const crypto = require('crypto')
+                    outputArchiveData.on('close', async function () {
+                        console.log('archive data closed');
 
-                        const salt = crypto.randomBytes(8)
-                        const secret = crypto.pbkdf2Sync(req.body.password, salt, 10000, 48, 'sha256')
-                        const key = secret.subarray(0, 32)
-                        const iv = secret.subarray(32, 48)
-                        const cipher = crypto.createCipheriv('aes-256-cbc', key, iv)
-                        
-                        const writeStream = fs.createWriteStream(`${backupPath}/data.tar.gz.enc`)
-                        writeStream.write(Buffer.concat([Buffer.from('Salted__', 'utf8'), salt]))
-                        fs.createReadStream(`${backupPath}/data.tar.gz`)
-                        .pipe(cipher)
-                        .pipe(writeStream)
-                        .on('close', function() {
+                        // Create final archive
+                        console.log('Creating final archive')
+                        const outputArchive = fs.createWriteStream(`${backupPath}/${path.basename(filename)}.tar`)
+                        const archive = archiver('tar', { gzip: true })
+                        archive.pipe(outputArchive)
+                        archive.append(JSON.stringify(backup, null, 2), { name: 'backup.json' })
+                        if (req.body.password) {
+                            setBackupState(STATE_ENCRYPTING_DATA)
+                            console.log('starting data archive encryption')
+                            const crypto = require('crypto')
+
+                            const salt = crypto.randomBytes(8)
+                            const secret = crypto.pbkdf2Sync(req.body.password, salt, 10000, 48, 'sha256')
+                            const key = secret.subarray(0, 32)
+                            const iv = secret.subarray(32, 48)
+                            const cipher = crypto.createCipheriv('aes-256-cbc', key, iv)
+
+                            const writeStream = fs.createWriteStream(`${backupPath}/data.tar.gz.enc`)
+                            writeStream.write(Buffer.concat([Buffer.from('Salted__', 'utf8'), salt]))
+                            fs.createReadStream(`${backupPath}/data.tar.gz`)
+                                .pipe(cipher)
+                                .pipe(writeStream)
+                                .on('close', function () {
+                                    setBackupState(STATE_BUILDING_ARCHIVE)
+                                    console.log('data archive encryption  ed')
+                                    writeStream.end()
+                                    archive.file((`${backupPath}/data.tar.gz.enc`), { name: 'data.tar.gz.enc' })
+                                    archive.finalize()
+                                    console.log('archive finale finalized')
+                                })
+                        }
+                        else {
                             setBackupState(STATE_BUILDING_ARCHIVE)
-                            console.log('data archive encryption  ed')
-                            writeStream.end()
-                            archive.file((`${backupPath}/data.tar.gz.enc`), {name: 'data.tar.gz.enc'})
-                            archive.finalize()
+                            console.log('building final archive')
+                            archive.file(`${backupPath}/data.tar.gz`, { name: 'data.tar.gz' })
+                            await archive.finalize()
                             console.log('archive finale finalized')
-                        })
-                    }
-                    else {
-                        setBackupState(STATE_BUILDING_ARCHIVE)
-                        console.log('building final archive')
-                        archive.file(`${backupPath}/data.tar.gz`, {name: 'data.tar.gz'})
-                        await archive.finalize()
-                        console.log('archive finale finalized')
-                    }
+                        }
 
-                    outputArchive.on('close', function() {
-                        console.log('archive final closed')
-                        setBackupState(STATE_IDLE)
-                        
-                        fs.rmSync(backupTmpPath, {recursive: true, force: true})
-                        fs.rmSync(`${backupPath}/data.tar.gz`, {force: true})
-                        fs.rmSync(`${backupPath}/data.tar.gz.enc`, {force: true})
+                        outputArchive.on('close', function () {
+                            console.log('archive final closed')
+                            setBackupState(STATE_IDLE)
+
+                            fs.rmSync(backupTmpPath, { recursive: true, force: true })
+                            fs.rmSync(`${backupPath}/data.tar.gz`, { force: true })
+                            fs.rmSync(`${backupPath}/data.tar.gz.enc`, { force: true })
+                        })
                     })
-                })
-            }
-            else {
-                errors.forEach(e => {
-                    console.log(`Something went wrong with the backup ${e.model}`)
-                    console.log(e.error)
-                })
-                setBackupState(STATE_BACKUP_ERROR)
-                fs.rmSync(backupTmpPath, {recursive: true, force: true})
-            }
-        })
+                }
+                else {
+                    errors.forEach(e => {
+                        console.log(`Something went wrong with the backup ${e.model}`)
+                        console.log(e.error)
+                    })
+                    setBackupState(STATE_BACKUP_ERROR)
+                    fs.rmSync(backupTmpPath, { recursive: true, force: true })
+                }
+            })
 
         Response.Ok(res, 'Backup request submitted')
     });
@@ -507,7 +507,7 @@ module.exports = function(app) {
             extract.on('entry', (header, stream, next) => {
                 console.log('entry: ', header.name)
                 if (
-                    files.includes(header.name) || 
+                    files.includes(header.name) ||
                     (utils.isSafePath(header.name) && directories.some(e => path.normalize(header.name).startsWith(e)))
                 ) {
                     if (header.type === "directory") {
@@ -519,7 +519,7 @@ module.exports = function(app) {
                         } catch (error) {
                             reject(error)
                         }
-                        
+
                     }
                     else {
                         console.log('extracting')
@@ -560,7 +560,7 @@ module.exports = function(app) {
                 console.log(filesExtracted.length)
                 console.log(files)
                 console.log(missingFiles)
-                if (filesExtracted.length === 0 )
+                if (filesExtracted.length === 0)
                     reject(new Error('No files were extracted from the Archive'))
                 else if (missingFiles.length > 0)
                     reject(new Error(`Missing files in the archive: ${missingFiles.toString()}`))
@@ -573,10 +573,10 @@ module.exports = function(app) {
             })
 
             readStream
-            .pipe(zlib.createGunzip())
-            .on('error', err => reject(err))
-            .pipe(extract)
-            .on('error', err => reject(err))
+                .pipe(zlib.createGunzip())
+                .on('error', err => reject(err))
+                .pipe(extract)
+                .on('error', err => reject(err))
         })
     }
 
@@ -599,20 +599,20 @@ module.exports = function(app) {
                         const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv)
 
                         readStream
-                        .pipe(decipher)
-                        .on('error', (err) => reject({
-                            fn: 'BadParameters', 
-                            message: 'Decryption failed. Wrong password or corrupted file'
-                        }))
-                        .pipe(writeStream)
-                        .on('finish', () => {
-                            console.log('Decryption finished')
-                            resolve()
-                        })
-                        .on('error', (err) => reject({
-                            fn: 'BadParameters', 
-                            message: 'Decryption failed. Wrong password or corrupted file'
-                        }))
+                            .pipe(decipher)
+                            .on('error', (err) => reject({
+                                fn: 'BadParameters',
+                                message: 'Decryption failed. Wrong password or corrupted file'
+                            }))
+                            .pipe(writeStream)
+                            .on('finish', () => {
+                                console.log('Decryption finished')
+                                resolve()
+                            })
+                            .on('error', (err) => reject({
+                                fn: 'BadParameters',
+                                message: 'Decryption failed. Wrong password or corrupted file'
+                            }))
 
                         break
                     }
@@ -636,11 +636,11 @@ module.exports = function(app) {
             }
             resolve(results);
         })
-        
+
     }
 
     // Restore Backup
-    app.post("/api/backups/:slug/restore", acl.hasPermission('backups:update'), async function(req, res) {
+    app.post("/api/backups/:slug/restore", acl.hasPermission('backups:update'), async function (req, res) {
         if (![STATE_IDLE, STATE_BACKUP_ERROR, STATE_RESTORE_ERROR].includes(getBackupState().state)) {
             Response.Processing(res, 'Operation already in progress')
             return
@@ -672,14 +672,14 @@ module.exports = function(app) {
         }
 
         const filename = await getBackupFilename(req.params.slug)
-        if (!filename || !fs.existsSync(`${backupPath}/${filename}`)) {
+        if (!filename || !fs.existsSync(`${backupPath}/${path.basename(filename)}`)) {
             Response.NotFound(res, 'Backup File not found')
             return
         }
 
         const diskUsage = diskusage.checkSync('/')
         const maxFileSize = diskUsage.available - (1024 * 1024 * 1024) // Free space - 1GB
-        const fileSize = fs.statSync(`${backupPath}/${filename}`).size
+        const fileSize = fs.statSync(`${backupPath}/${path.basename(filename)}`).size
         if ((fileSize * 3) > maxFileSize) {
             Response.BadParameters(res, 'Not enough space on disk for restauration')
             return
@@ -697,193 +697,193 @@ module.exports = function(app) {
             restoreMode = "revert"
 
         readBackupInfo(`${filename}`)
-        .then(result => {
-            setBackupState(STATE_EXTRACTING_INFO)
-            console.log('restore extracting info')
+            .then(result => {
+                setBackupState(STATE_EXTRACTING_INFO)
+                console.log('restore extracting info')
 
-            info = result
-            
-            if (info.protected && !req.body.password)
-                throw ({fn: 'BadParameters', message: 'Backup is protected, password is required'})
-            else if (info.protected)
-                return extractFiles(`${backupPath}/${filename}`, backupPath, ['data.tar.gz.enc'])
-            else
-                return extractFiles(`${backupPath}/${filename}`, backupPath, ['data.tar.gz'])
-        })
-        .then(async () => {
-            if (info.protected) {
-                setBackupState(STATE_DECRYPTING_DATA)
-                console.log('decrypting data')
-                await decryptArchive(`${backupPath}/data.tar.gz.enc`, `${backupPath}/data.tar.gz`, req.body.password)
-            }
-            // Extract files in data.tar.gz
-            setBackupState(STATE_EXTRACTING_DATA)
-            console.log('extracting data')
+                info = result
 
-            // Audits
-            if (info.data.includes('Audits') && backupData.includes('Audits')) {
-                files.push('audits.json')
-                files.push('audits-images.json')
-            }
-
-            // Vulnerabilities
-            if (info.data.includes('Vulnerabilities') && backupData.includes('Vulnerabilities')) {
-                files.push('vulnerabilities.json')
-                files.push('vulnerabilities-images.json')
-            }
-
-            // Vulnerabilities Updates
-            if (info.data.includes('Vulnerabilities Updates') && backupData.includes('Vulnerabilities Updates')) {
-                files.push('vulnerabilityUpdates.json')
-                files.push('vulnerabilityUpdates-images.json')
-            }
-
-            // Users
-            if (info.data.includes('Users') && backupData.includes('Users')) {
-                files.push('users.json')
-            }
-
-            // Customers
-            if (info.data.includes('Clients') && backupData.includes('Clients')) {
-                files.push('clients.json')
-            }
-            if (info.data.includes('Companies') && backupData.includes('Companies')) {
-                files.push('companies.json')
-            }
-
-            // Templates
-            if (info.data.includes('Templates') && backupData.includes('Templates')) {
-                files.push('templates.json')
-                files.push('report-templates/')
-            }
-
-            // Custom Data
-            if (info.data.includes('Audit Types') && backupData.includes('Audit Types')) {
-                files.push('auditTypes.json')
-            }
-            if (info.data.includes('Custom Fields') && backupData.includes('Custom Fields')) {
-                files.push('customFields.json')
-            }
-            if (info.data.includes('Custom Sections') && backupData.includes('Custom Sections')) {
-                files.push('customSections.json')
-            }
-            if (info.data.includes('Vulnerability Types') && backupData.includes('Vulnerability Types')) {
-                files.push('vulnerabilityTypes.json')
-            }
-            if (info.data.includes('Vulnerability Categories') && backupData.includes('Vulnerability Categories')) {
-                files.push('vulnerabilityCategories.json')
-            }
-
-            // Settings
-            if (info.data.includes('Settings') && backupData.includes('Settings')) {
-                files.push('settings.json')
-            }
-
-            if (!fs.existsSync(restoreTmpPath))
-                fs.mkdirSync(restoreTmpPath)
-
-            if (files.length === 0)
-                throw new Error('Requested Data not in Backup file')
-            else
-                return extractFiles(`${backupPath}/data.tar.gz`, restoreTmpPath, files)
-        })
-        .then(() => {
-            // Restore Data
-            setBackupState(STATE_RESTORING_DATA)
-            console.log('restoring data')
-
-            let restorePromises = [Language.restore(restoreTmpPath)]
-            // Audits
-            if (info.data.includes('Audits') && backupData.includes('Audits')) {
-                restorePromises.push(Audit.restore(restoreTmpPath))
-            }
-
-            // Vulnerabilities
-            if (info.data.includes('Vulnerabilities') && backupData.includes('Vulnerabilities')) {
-                restorePromises.push(Vulnerability.restore(restoreTmpPath, restoreMode))
-            }
-
-            // Vulnerabilities Updates
-            if (info.data.includes('Vulnerabilities Updates') && backupData.includes('Vulnerabilities Updates')) {
-                restorePromises.push(VulnerabilityUpdate.restore(restoreTmpPath, restoreMode))
-            }
-
-            // Users
-            if (info.data.includes('Users') && backupData.includes('Users')) {
-                restorePromises.push(User.restore(restoreTmpPath, restoreMode))
-            }
-
-            // Customers
-            if (info.data.includes('Clients') && backupData.includes('Clients')) {
-                restorePromises.push(Client.restore(restoreTmpPath, restoreMode))
-            }
-            if (info.data.includes('Companies') && backupData.includes('Companies')) {
-                restorePromises.push(Company.restore(restoreTmpPath, restoreMode))
-            }
-
-            // Templates
-            if (info.data.includes('Templates') && backupData.includes('Templates')) {
-                restorePromises.push(Template.restore(restoreTmpPath, restoreMode))
-            }
-
-            // Custom Data
-            if (info.data.includes('Audit Types') && backupData.includes('Audit Types')) {
-                restorePromises.push(AuditType.restore(restoreTmpPath, restoreMode))
-            }
-            if (info.data.includes('Custom Fields') && backupData.includes('Custom Fields')) {
-                restorePromises.push(CustomField.restore(restoreTmpPath, restoreMode))
-            }
-            if (info.data.includes('Custom Sections') && backupData.includes('Custom Sections')) {
-                restorePromises.push(CustomSection.restore(restoreTmpPath, restoreMode))
-            }
-            if (info.data.includes('Vulnerability Types') && backupData.includes('Vulnerability Types')) {
-                restorePromises.push(VulnerabilityType.restore(restoreTmpPath, restoreMode))
-            }
-            if (info.data.includes('Vulnerability Categories') && backupData.includes('Vulnerability Categories')) {
-                restorePromises.push(VulnerabilityCategory.restore(restoreTmpPath, restoreMode))
-            }
-
-            // Settings
-            if (info.data.includes('Settings') && backupData.includes('Settings')) {
-                restorePromises.push(Settings.restore(restoreTmpPath))
-            }
-            
-            
-            // return Promise.allSettled(restorePromises)
-            return processPromisesSequentially(restorePromises)
-        })
-        .then(results => {
-            let errors = []
-            results.forEach(e => {
-                if (e.status === 'rejected')
-                    errors.push(e.reason)
+                if (info.protected && !req.body.password)
+                    throw ({ fn: 'BadParameters', message: 'Backup is protected, password is required' })
+                else if (info.protected)
+                    return extractFiles(`${backupPath}/${filename}`, backupPath, ['data.tar.gz.enc'])
+                else
+                    return extractFiles(`${backupPath}/${filename}`, backupPath, ['data.tar.gz'])
             })
+            .then(async () => {
+                if (info.protected) {
+                    setBackupState(STATE_DECRYPTING_DATA)
+                    console.log('decrypting data')
+                    await decryptArchive(`${backupPath}/data.tar.gz.enc`, `${backupPath}/data.tar.gz`, req.body.password)
+                }
+                // Extract files in data.tar.gz
+                setBackupState(STATE_EXTRACTING_DATA)
+                console.log('extracting data')
 
-            if (errors.length === 0){
-                setBackupState(STATE_IDLE)
-                console.log('restore successfull')
-            }
-            else {
-                let msg = "Error occured with restoration process on the following modules:"
-                errors.forEach(e => {
-                    console.log(`Something went wrong with the restoration ${e.model}`)
-                    console.log(e.error)
-                    msg += "\n"+e.model+"\n"+e.error
+                // Audits
+                if (info.data.includes('Audits') && backupData.includes('Audits')) {
+                    files.push('audits.json')
+                    files.push('audits-images.json')
+                }
+
+                // Vulnerabilities
+                if (info.data.includes('Vulnerabilities') && backupData.includes('Vulnerabilities')) {
+                    files.push('vulnerabilities.json')
+                    files.push('vulnerabilities-images.json')
+                }
+
+                // Vulnerabilities Updates
+                if (info.data.includes('Vulnerabilities Updates') && backupData.includes('Vulnerabilities Updates')) {
+                    files.push('vulnerabilityUpdates.json')
+                    files.push('vulnerabilityUpdates-images.json')
+                }
+
+                // Users
+                if (info.data.includes('Users') && backupData.includes('Users')) {
+                    files.push('users.json')
+                }
+
+                // Customers
+                if (info.data.includes('Clients') && backupData.includes('Clients')) {
+                    files.push('clients.json')
+                }
+                if (info.data.includes('Companies') && backupData.includes('Companies')) {
+                    files.push('companies.json')
+                }
+
+                // Templates
+                if (info.data.includes('Templates') && backupData.includes('Templates')) {
+                    files.push('templates.json')
+                    files.push('report-templates/')
+                }
+
+                // Custom Data
+                if (info.data.includes('Audit Types') && backupData.includes('Audit Types')) {
+                    files.push('auditTypes.json')
+                }
+                if (info.data.includes('Custom Fields') && backupData.includes('Custom Fields')) {
+                    files.push('customFields.json')
+                }
+                if (info.data.includes('Custom Sections') && backupData.includes('Custom Sections')) {
+                    files.push('customSections.json')
+                }
+                if (info.data.includes('Vulnerability Types') && backupData.includes('Vulnerability Types')) {
+                    files.push('vulnerabilityTypes.json')
+                }
+                if (info.data.includes('Vulnerability Categories') && backupData.includes('Vulnerability Categories')) {
+                    files.push('vulnerabilityCategories.json')
+                }
+
+                // Settings
+                if (info.data.includes('Settings') && backupData.includes('Settings')) {
+                    files.push('settings.json')
+                }
+
+                if (!fs.existsSync(restoreTmpPath))
+                    fs.mkdirSync(restoreTmpPath)
+
+                if (files.length === 0)
+                    throw new Error('Requested Data not in Backup file')
+                else
+                    return extractFiles(`${backupPath}/data.tar.gz`, restoreTmpPath, files)
+            })
+            .then(() => {
+                // Restore Data
+                setBackupState(STATE_RESTORING_DATA)
+                console.log('restoring data')
+
+                let restorePromises = [Language.restore(restoreTmpPath)]
+                // Audits
+                if (info.data.includes('Audits') && backupData.includes('Audits')) {
+                    restorePromises.push(Audit.restore(restoreTmpPath))
+                }
+
+                // Vulnerabilities
+                if (info.data.includes('Vulnerabilities') && backupData.includes('Vulnerabilities')) {
+                    restorePromises.push(Vulnerability.restore(restoreTmpPath, restoreMode))
+                }
+
+                // Vulnerabilities Updates
+                if (info.data.includes('Vulnerabilities Updates') && backupData.includes('Vulnerabilities Updates')) {
+                    restorePromises.push(VulnerabilityUpdate.restore(restoreTmpPath, restoreMode))
+                }
+
+                // Users
+                if (info.data.includes('Users') && backupData.includes('Users')) {
+                    restorePromises.push(User.restore(restoreTmpPath, restoreMode))
+                }
+
+                // Customers
+                if (info.data.includes('Clients') && backupData.includes('Clients')) {
+                    restorePromises.push(Client.restore(restoreTmpPath, restoreMode))
+                }
+                if (info.data.includes('Companies') && backupData.includes('Companies')) {
+                    restorePromises.push(Company.restore(restoreTmpPath, restoreMode))
+                }
+
+                // Templates
+                if (info.data.includes('Templates') && backupData.includes('Templates')) {
+                    restorePromises.push(Template.restore(restoreTmpPath, restoreMode))
+                }
+
+                // Custom Data
+                if (info.data.includes('Audit Types') && backupData.includes('Audit Types')) {
+                    restorePromises.push(AuditType.restore(restoreTmpPath, restoreMode))
+                }
+                if (info.data.includes('Custom Fields') && backupData.includes('Custom Fields')) {
+                    restorePromises.push(CustomField.restore(restoreTmpPath, restoreMode))
+                }
+                if (info.data.includes('Custom Sections') && backupData.includes('Custom Sections')) {
+                    restorePromises.push(CustomSection.restore(restoreTmpPath, restoreMode))
+                }
+                if (info.data.includes('Vulnerability Types') && backupData.includes('Vulnerability Types')) {
+                    restorePromises.push(VulnerabilityType.restore(restoreTmpPath, restoreMode))
+                }
+                if (info.data.includes('Vulnerability Categories') && backupData.includes('Vulnerability Categories')) {
+                    restorePromises.push(VulnerabilityCategory.restore(restoreTmpPath, restoreMode))
+                }
+
+                // Settings
+                if (info.data.includes('Settings') && backupData.includes('Settings')) {
+                    restorePromises.push(Settings.restore(restoreTmpPath))
+                }
+
+
+                // return Promise.allSettled(restorePromises)
+                return processPromisesSequentially(restorePromises)
+            })
+            .then(results => {
+                let errors = []
+                results.forEach(e => {
+                    if (e.status === 'rejected')
+                        errors.push(e.reason)
                 })
 
-                throw new Error(msg)
-            }
-        })
-        .catch(err => {
-            setBackupState(STATE_RESTORE_ERROR, err.message)
-            console.log(err)
-        })
-        .finally(() => {
-            fs.rmSync(`${backupPath}/data.tar.gz`, {force: true})
-            fs.rmSync(`${backupPath}/data.tar.gz.enc`, {force: true})
-            fs.rmSync(restoreTmpPath, {recursive: true, force: true})
-        })
-        
+                if (errors.length === 0) {
+                    setBackupState(STATE_IDLE)
+                    console.log('restore successfull')
+                }
+                else {
+                    let msg = "Error occured with restoration process on the following modules:"
+                    errors.forEach(e => {
+                        console.log(`Something went wrong with the restoration ${e.model}`)
+                        console.log(e.error)
+                        msg += "\n" + e.model + "\n" + e.error
+                    })
+
+                    throw new Error(msg)
+                }
+            })
+            .catch(err => {
+                setBackupState(STATE_RESTORE_ERROR, err.message)
+                console.log(err)
+            })
+            .finally(() => {
+                fs.rmSync(`${backupPath}/data.tar.gz`, { force: true })
+                fs.rmSync(`${backupPath}/data.tar.gz.enc`, { force: true })
+                fs.rmSync(restoreTmpPath, { recursive: true, force: true })
+            })
+
         Response.Ok(res, 'Restore request submitted')
     })
 

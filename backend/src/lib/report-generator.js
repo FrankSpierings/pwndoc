@@ -19,11 +19,12 @@ var Image = require('mongoose').model('Image');
 var Settings = require('mongoose').model('Settings');
 var CVSS31 = require('./cvsscalc31.js');
 var translate = require('../translate')
+const path = require('path');
 var $t
 
 // Generate document with docxtemplater
 async function generateDoc(audit) {
-    var templatePath = `${__basedir}/../report-templates/${audit.template.name}.${audit.template.ext || 'docx'}`
+    var templatePath = `${__basedir}/../report-templates/${path.basename(audit.template.name)}.${path.basename(audit.template.ext || 'docx')}`
     var content = fs.readFileSync(templatePath, "binary");
 
     var zip = new PizZip(content);

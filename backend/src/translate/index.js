@@ -14,7 +14,7 @@ function translate(message, locale = gLocale) {
         if (!availableLocales.includes(locale)) {
             return message
         }
-        let dictionary = JSON.parse(fs.readFileSync(`${__dirname}/${locale}.json`))
+        let dictionary = JSON.parse(fs.readFileSync(`${__dirname}/${path.basename(locale)}.json`))
         if (dictionary.hasOwnProperty(message)) {
             return dictionary[message] || message
         } else {
