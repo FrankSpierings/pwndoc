@@ -1,7 +1,7 @@
 // Dynamic generation of JWT Secret if not exist (different for each environnment)
 var fs = require('fs')
 var env = process.env.NODE_ENV || 'dev'
-var config = require('../config/config.json')
+var config = JSON.parse(fs.readFileSync(`${__basedir}/config/config.json`, 'utf8'))
 
 if (!config[env].jwtSecret) {
     config[env].jwtSecret = require('crypto').randomBytes(32).toString('hex')
@@ -82,15 +82,16 @@ var builtInRoles = {
 }
 
 try {
-    var customRoles = require('../config/roles.json')}
-catch(error) {
+    var customRoles = JSON.parse(fs.readFileSync(`${__basedir}/config/roles.json`, 'utf8'))
+}
+catch (error) {
     var customRoles = []
 }
-var roles = {...customRoles, ...builtInRoles}
+var roles = { ...customRoles, ...builtInRoles }
 
 class ACL {
     constructor(roles) {
-        if(typeof roles !== 'object') {
+        if (typeof roles !== 'object') {
             throw new TypeError('Expected an object as input')
         }
         this.roles = roles
@@ -98,7 +99,7 @@ class ACL {
 
     isAllowed(role, permission) {
         // Check if role exists
-        if(!this.roles[role] && !this.roles['user']) {
+        if (!this.roles[role] && !this.roles['user']) {
             return false
         }
 
@@ -109,7 +110,7 @@ class ACL {
         }
 
         // Check if there is inheritance
-        if(!$role.inherits || $role.inherits.length < 1) {
+        if (!$role.inherits || $role.inherits.length < 1) {
             return false
         }
 
@@ -117,7 +118,7 @@ class ACL {
         return $role.inherits.some(role => this.isAllowed(role, permission))
     }
 
-    hasPermission (permission) {
+    hasPermission(permission) {
         var Response = require('./httpResponse')
         var jwt = require('jsonwebtoken')
 
@@ -126,13 +127,13 @@ class ACL {
                 Response.Unauthorized(res, 'No token provided')
                 return;
             }
-    
+
             var cookie = req.cookies['token'].split(' ')
             if (cookie.length !== 2 || cookie[0] !== 'JWT') {
                 Response.Unauthorized(res, 'Bad token type')
                 return
             }
-    
+
             var token = cookie[1]
             jwt.verify(token, jwtSecret, (err, decoded) => {
                 if (err) {
@@ -142,8 +143,8 @@ class ACL {
                         Response.Unauthorized(res, 'Invalid token')
                     return
                 }
-                
-                if ( permission === "validtoken" || this.isAllowed(decoded.role, permission)) {
+
+                if (permission === "validtoken" || this.isAllowed(decoded.role, permission)) {
                     req.decodedToken = decoded
                     return next()
                 }
@@ -174,7 +175,7 @@ class ACL {
 
         if (result.includes('*'))
             return '*'
-        
+
         return result
     }
 }
